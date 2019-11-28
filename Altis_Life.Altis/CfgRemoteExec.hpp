@@ -1,10 +1,6 @@
 #define F(NAME,TARGET) class NAME { \
     allowedTargets = TARGET; \
 };
-#define JIP(NAME,TARGET) class NAME { \
-    allowedTargets = TARGET; \
-    jip = 1; \
-};
 
 #define ANYONE 0
 #define CLIENT 1
@@ -22,9 +18,9 @@ class CfgRemoteExec {
         F(life_fnc_adminID,CLIENT)
         F(life_fnc_adminInfo,CLIENT)
         F(life_fnc_bountyReceive,CLIENT)
-        JIP(life_fnc_copLights,CLIENT)
+        F(life_fnc_copLights,CLIENT)
         F(life_fnc_copSearch,CLIENT)
-        JIP(life_fnc_copSiren,CLIENT)
+        F(life_fnc_copSiren,CLIENT)
         F(life_fnc_freezePlayer,CLIENT)
         F(life_fnc_gangCreated,CLIENT)
         F(life_fnc_gangDisbanded,CLIENT)
@@ -39,9 +35,9 @@ class CfgRemoteExec {
         F(life_fnc_licenseCheck,CLIENT)
         F(life_fnc_licensesRead,CLIENT)
         F(life_fnc_lightHouse,CLIENT)
-        JIP(life_fnc_mediclights,CLIENT)
+        F(life_fnc_mediclights,CLIENT)
         F(life_fnc_medicRequest,CLIENT)
-        JIP(life_fnc_medicSiren,CLIENT)
+        F(life_fnc_medicSiren,CLIENT)
         F(life_fnc_moveIn,CLIENT)
         F(life_fnc_pickupItem,CLIENT)
         F(life_fnc_pickupMoney,CLIENT)
@@ -62,8 +58,6 @@ class CfgRemoteExec {
         F(life_fnc_vehicleAnimate,CLIENT)
         F(life_fnc_wantedList,CLIENT)
         F(life_fnc_wireTransfer,CLIENT)
-        F(life_fnc_gangBankResponse,CLIENT)
-        F(life_fnc_chopShopSold,CLIENT)
         F(SOCK_fnc_dataQuery,CLIENT)
         F(SOCK_fnc_insertPlayerInfo,CLIENT)
         F(SOCK_fnc_requestReceived,CLIENT)
@@ -76,6 +70,7 @@ class CfgRemoteExec {
         F(TON_fnc_player_query,CLIENT)
 
         /* Server only functions */
+        F(BIS_fnc_execVM,SERVER)
         F(DB_fnc_insertRequest,SERVER)
         F(DB_fnc_queryRequest,SERVER)
         F(DB_fnc_updatePartial,SERVER)
@@ -103,6 +98,7 @@ class CfgRemoteExec {
         F(TON_fnc_removeGang,SERVER)
         F(TON_fnc_sellHouse,SERVER)
         F(TON_fnc_sellHouseContainer,SERVER)
+        F(TON_fnc_setObjVar,SERVER)
         F(TON_fnc_spawnVehicle,SERVER)
         F(TON_fnc_spikeStrip,SERVER)
         F(TON_fnc_updateGang,SERVER)

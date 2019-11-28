@@ -9,7 +9,6 @@
 private ["_handle"];
 //Reset our weight and other stuff
 
-life_action_inUse = false;
 life_use_atm = true;
 life_hunger = 100;
 life_thirst = 100;
@@ -25,7 +24,20 @@ player setVariable ["Revive",nil,true];
 player setVariable ["name",nil,true];
 player setVariable ["Reviving",nil,true];
 
-[] call life_fnc_startLoadout;
+//Load gear for a 'new life'
+switch (playerSide) do
+{
+    case west: {
+        _handle = [] spawn life_fnc_copLoadout;
+    };
+    case civilian: {
+        _handle = [] spawn life_fnc_civLoadout;
+    };
+    case independent: {
+        _handle = [] spawn life_fnc_medicLoadout;
+    };
+    waitUntil {scriptDone _handle};
+};
 
 //Cleanup of weapon containers near the body & hide it.
 if (!isNull life_corpse) then {

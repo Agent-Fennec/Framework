@@ -9,6 +9,8 @@
 private ["_timeStamp","_extDBNotLoaded"];
 if (EXTDB_SETTING(getNumber,"HeadlessSupport") isEqualTo 0) exitWith {};
 
+[] execVM "\life_hc\KRON_Strings.sqf";
+
 _extDBNotLoaded = "";
 
 life_save_civilian_position = if (LIFE_SETTINGS(getNumber,"save_civilian_position") isEqualTo 0) then {false} else {true};
@@ -48,6 +50,13 @@ if (_extDBNotLoaded isEqualType []) then {
 
 if (_extDBNotLoaded isEqualType []) exitWith {}; //extDB3-HC did not fully initialize so terminate the rest of the initialization process.
 
+[] spawn {
+    for "_i" from 0 to 1 step 0 do {
+        publicVariableServer "serv_sv_use";
+        uiSleep 60;
+    };
+};
+
 ["CALL resetLifeVehicles",1] call HC_fnc_asyncCall;
 ["CALL deleteDeadVehicles",1] call HC_fnc_asyncCall;
 ["CALL deleteOldHouses",1] call HC_fnc_asyncCall;
@@ -56,7 +65,7 @@ if (_extDBNotLoaded isEqualType []) exitWith {}; //extDB3-HC did not fully initi
 _timeStamp = diag_tickTime;
 diag_log "----------------------------------------------------------------------------------------------------";
 diag_log "------------------------------------ Starting Altis Life HC Init -----------------------------------";
-diag_log format["-------------------------------------------- Version %1 -----------------------------------------",(LIFE_SETTINGS(getText,"framework_version"))];
+diag_log "-------------------------------------------- Version 5.0.0 -----------------------------------------";
 diag_log "----------------------------------------------------------------------------------------------------";
 
 [] execFSM "\life_hc\FSM\cleanup.fsm";
@@ -111,13 +120,6 @@ HC_MPAllowedFuncs = [
 ];
 
 CONSTVAR(HC_MPAllowedFuncs);
-
-[] spawn {
-    for "_i" from 0 to 1 step 0 do {
-        uiSleep 60;
-        publicVariableServer "serv_sv_use";
-    };
-};
 
 life_HC_isActive = true;
 publicVariable "life_HC_isActive";

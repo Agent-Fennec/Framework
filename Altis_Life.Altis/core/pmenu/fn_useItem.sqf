@@ -6,31 +6,20 @@
     Description:
     Main function for item effects and functionality through the player menu.
 */
+private "_item";
 disableSerialization;
 if ((lbCurSel 2005) isEqualTo -1) exitWith {hint localize "STR_ISTR_SelectItemFirst";};
-private _item = CONTROL_DATA(2005);
-private _edible = M_CONFIG(getNumber, "VirtualItems", _item, "edible");
-
-if !(_edible isEqualTo -1) exitWith {
-    if ([false, _item, 1] call life_fnc_handleInv) then {
-        private _sum = life_hunger + _edible;
-
-        life_hunger = (_sum max 5) min 100; //never below 5 or above 100
-
-        [] call life_fnc_p_updateMenu;
-        [] call life_fnc_hudUpdate;
-    };
-};
+_item = CONTROL_DATA(2005);
 
 switch (true) do {
-    case (_item in ["waterBottle", "coffee", "redgull"]): {
-        if ([false, _item, 1] call life_fnc_handleInv) then {
+    case (_item in ["waterBottle","coffee","redgull"]): {
+        if ([false,_item,1] call life_fnc_handleInv) then {
             life_thirst = 100;
-            if (LIFE_SETTINGS(getNumber, "enable_fatigue") isEqualTo 1) then {player setFatigue 0;};
-            if (_item isEqualTo "redgull" && {LIFE_SETTINGS(getNumber, "enable_fatigue") isEqualTo 1}) then {
+            if (LIFE_SETTINGS(getNumber,"enable_fatigue") isEqualTo 1) then {player setFatigue 0;};
+            if (_item isEqualTo "redgull" && {LIFE_SETTINGS(getNumber,"enable_fatigue") isEqualTo 1}) then {
                 [] spawn {
                     life_redgull_effect = time;
-                    titleText[localize "STR_ISTR_RedGullEffect", "PLAIN"];
+                    titleText[localize "STR_ISTR_RedGullEffect","PLAIN"];
                     player enableFatigue false;
                     waitUntil {!alive player || ((time - life_redgull_effect) > (3 * 60))};
                     player enableFatigue true;
@@ -56,17 +45,17 @@ switch (true) do {
         closeDialog 0;
     };
 
-    case (_item isEqualTo "storagesmall"): {
-        [false] call life_fnc_storageBox;
-    };
-
-    case (_item isEqualTo "storagebig"): {
-        [true] call life_fnc_storageBox;
+    _itemConverted = getText(missionConfigFile >> "CfgDonkeyPunchCustoms" >> _item);
+	_lifeContainers = getArray(missionConfigFile >> "CfgDonkeyPunchCustoms" >> "LifeContainers");
+	_lifeFurniture = getArray(missionConfigFile >> "CfgDonkeyPunchCustoms" >> "BuildableFurniture");
+	_lifeContainers = _lifeContainers + _lifeFurniture;
+	case (_itemConverted in _lifeContainers): {
+        [_item] call life_fnc_storageBox;
     };
 
     case (_item isEqualTo "spikeStrip"): {
         if (!isNull life_spikestrip) exitWith {hint localize "STR_ISTR_SpikesDeployment"; closeDialog 0};
-        if ([false, _item, 1] call life_fnc_handleInv) then {
+        if ([false,_item,1] call life_fnc_handleInv) then {
             [] spawn life_fnc_spikeStrip;
             closeDialog 0;
         };
@@ -86,6 +75,20 @@ switch (true) do {
     case (_item isEqualTo "lockpick"): {
         [] spawn life_fnc_lockpick;
         closeDialog 0;
+    };
+
+    case (_item in ["apple","rabbit","salema","ornate","mackerel","tuna","mullet","catshark","turtle_soup","hen","rooster","sheep","goat","donuts","tbacon","peach"]): {
+        if (!(M_CONFIG(getNumber,"VirtualItems",_item,"edible") isEqualTo -1)) then {
+            if ([false,_item,1] call life_fnc_handleInv) then {
+                _val = M_CONFIG(getNumber,"VirtualItems",_item,"edible");
+                _sum = life_hunger + _val;
+                switch (true) do {
+                    case (_val < 0 && _sum < 1): {life_hunger = 5;}; //This adds the ability to set the entry edible to a negative value and decrease the hunger without death
+                    case (_sum > 100): {life_hunger = 100;};
+                    default {life_hunger = _sum;};
+                };
+            };
+        };
     };
 
     default {

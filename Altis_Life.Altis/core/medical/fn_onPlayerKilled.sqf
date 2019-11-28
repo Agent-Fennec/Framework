@@ -2,6 +2,7 @@
 /*
     File: fn_onPlayerKilled.sqf
     Author: Bryan "Tonic" Boardwine
+
     Description:
     When the player dies collect various information about that player
     and pull up the death dialog / camera functionality.
@@ -27,11 +28,6 @@ _unit setVariable ["transporting",false,true];
 _unit setVariable ["playerSurrender",false,true];
 _unit setVariable ["steam64id",(getPlayerUID player),true]; //Set the UID.
 
-//close the esc dialog
-if (dialog) then {
-    closeDialog 0;
-};
-
 //Setup our camera view
 life_deathCamera  = "CAMERA" camCreate (getPosATL _unit);
 showCinemaBorder true;
@@ -51,25 +47,25 @@ _unit spawn {
     disableSerialization;
     _RespawnBtn = ((findDisplay 7300) displayCtrl 7302);
     _Timer = ((findDisplay 7300) displayCtrl 7301);
-    if (LIFE_SETTINGS(getNumber,"respawn_timer") < 5) then {
-        _maxTime = time + 5;
-    } else {
-        _maxTime = time + LIFE_SETTINGS(getNumber,"respawn_timer");
-    };
+
+        if (LIFE_SETTINGS(getNumber,"respawn_timer") < 5) then {
+            _maxTime = time + 5;
+        } else {
+            _maxTime = time + LIFE_SETTINGS(getNumber,"respawn_timer");
+        };
     _RespawnBtn ctrlEnable false;
-    waitUntil {
-        _Timer ctrlSetText format [localize "STR_Medic_Respawn",[(_maxTime - time),"MM:SS"] call BIS_fnc_secondsToString];
-        round(_maxTime - time) <= 0 || isNull _this
-    };
+    waitUntil {_Timer ctrlSetText format [localize "STR_Medic_Respawn",[(_maxTime - time),"MM:SS"] call BIS_fnc_secondsToString];
+    round(_maxTime - time) <= 0 || isNull _this};
     _RespawnBtn ctrlEnable true;
     _Timer ctrlSetText localize "STR_Medic_Respawn_2";
 };
 
 _unit spawn {
+    private ["_requestBtn","_requestTime"];
     disableSerialization;
-    private _requestBtn = ((findDisplay 7300) displayCtrl 7303);
+    _requestBtn = ((findDisplay 7300) displayCtrl 7303);
     _requestBtn ctrlEnable false;
-    private _requestTime = time + 5;
+    _requestTime = time + 5;
     waitUntil {round(_requestTime - time) <= 0 || isNull _this};
     _requestBtn ctrlEnable true;
 };
@@ -78,18 +74,15 @@ _unit spawn {
 
 //Create a thread to follow with some what precision view of the corpse.
 [_unit] spawn {
-    private _unit = _this select 0;
-    waitUntil {
-        life_deathCamera camSetTarget _unit;
-        life_deathCamera camSetRelPos [0,3.5,4.5];
-        life_deathCamera camCommit 0;
-        speed _unit isEqualTo 0
-    };
+    private ["_unit"];
+    _unit = _this select 0;
+    waitUntil {if (speed _unit isEqualTo 0) exitWith {true}; life_deathCamera camSetTarget _unit; life_deathCamera camSetRelPos [0,3.5,4.5]; life_deathCamera camCommit 0;};
 };
 
 //Make the killer wanted
 if (!isNull _killer && {!(_killer isEqualTo _unit)} && {!(side _killer isEqualTo west)} && {alive _killer}) then {
     if (vehicle _killer isKindOf "LandVehicle") then {
+
         if (life_HC_isActive) then {
             [getPlayerUID _killer,_killer getVariable ["realname",name _killer],"187V"] remoteExecCall ["HC_fnc_wantedAdd",HC_Life];
         } else {
@@ -101,6 +94,7 @@ if (!isNull _killer && {!(_killer isEqualTo _unit)} && {!(side _killer isEqualTo
             [2] remoteExecCall ["life_fnc_removeLicenses",_killer];
         };
     } else {
+
         if (life_HC_isActive) then {
             [getPlayerUID _killer,_killer getVariable ["realname",name _killer],"187"] remoteExecCall ["HC_fnc_wantedAdd",HC_Life];
         } else {
@@ -116,10 +110,11 @@ if (!isNull _killer && {!(_killer isEqualTo _unit)} && {!(side _killer isEqualTo
 life_save_gear = [player] call life_fnc_fetchDeadGear;
 
 if (LIFE_SETTINGS(getNumber,"drop_weapons_onDeath") isEqualTo 0) then {
-    _unit removeWeapon (primaryWeapon _unit);
-    _unit removeWeapon (handgunWeapon _unit);
-    _unit removeWeapon (secondaryWeapon _unit);
+    _unit removeWeapon (primaryWeapon _unit); 
+    _unit removeWeapon (handgunWeapon _unit); 
+    _unit removeWeapon (secondaryWeapon _unit); 
 };
+
 
 //Killed by cop stuff...
 if (side _killer isEqualTo west && !(playerSide isEqualTo west)) then {
@@ -137,7 +132,6 @@ if (!isNull _killer && {!(_killer isEqualTo _unit)}) then {
 
 [_unit] call life_fnc_dropItems;
 
-life_action_inUse = false;
 life_hunger = 100;
 life_thirst = 100;
 life_carryWeight = 0;

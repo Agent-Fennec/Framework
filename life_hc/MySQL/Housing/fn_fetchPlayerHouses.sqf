@@ -30,7 +30,6 @@ _containerss = [];
     if (_gear isEqualType "") then {_gear = call compile format ["%1", _gear];};
     _container = createVehicle[_x select 2,[0,0,999],[],0,"NONE"];
     waitUntil {!isNil "_container" && {!isNull _container}};
-    _containerss = _house getVariable ["containers",[]];
     _containerss pushBack _container;
     _container allowDamage false;
     _container setPosATL _position;
@@ -81,7 +80,7 @@ _return = [];
     _pos = call compile format ["%1",_x select 1];
     _house = nearestObject [_pos, "House"];
     _house allowDamage false;
-    _return pushBack [_x select 1];
+    _return pushBack [_x select 1,_containerss];
 } forEach _houses;
 
 missionNamespace setVariable [format ["houses_%1",_uid],_return];

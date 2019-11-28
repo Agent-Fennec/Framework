@@ -55,7 +55,11 @@ if (isNull _curObject) exitWith {
     };
 };
 
-if ((_curObject isKindOf "B_supplyCrate_F" || _curObject isKindOf "Box_IND_Grenades_F") && {player distance _curObject < 3} ) exitWith {
+_type = typeOf _curObject;
+_lifeContainers = getArray(missionConfigFile >> "CfgDonkeyPunchCustoms" >> "LifeContainers");
+_lifeFurniture = getArray(missionConfigFile >> "CfgDonkeyPunchCustoms" >> "BuildableFurniture");
+_lifeContainers = _lifeContainers + _lifeFurniture;
+if ((_type in _lifeContainers) && {player distance _curObject < 3} ) exitWith {
     if (alive _curObject) then {
         [_curObject] call life_fnc_containerMenu;
     };
@@ -81,7 +85,7 @@ life_action_inUse = true;
 };
 
 //Check if it's a dead body.
-if (_curObject isKindOf "CAManBase" && {!alive _curObject}) exitWith {
+if (_curObject isKindOf "Man" && !(_curObject isKindOf "Animal") && {!alive _curObject} && !(_curObject getVariable ["Revive",false])) exitWith {
     //Hotfix code by ins0
     if ((playerSide isEqualTo west && {(LIFE_SETTINGS(getNumber,"revive_cops") isEqualTo 1)}) || {(playerSide isEqualTo civilian && {(LIFE_SETTINGS(getNumber,"revive_civ") isEqualTo 1)})} || {(playerSide isEqualTo east && {(LIFE_SETTINGS(getNumber,"revive_east") isEqualTo 1)})} || {playerSide isEqualTo independent}) then {
         if (life_inv_defibrillator > 0) then {
@@ -91,7 +95,7 @@ if (_curObject isKindOf "CAManBase" && {!alive _curObject}) exitWith {
 };
 
 //If target is a player then check if we can use the cop menu.
-if (isPlayer _curObject && _curObject isKindOf "CAManBase") then {
+if (isPlayer _curObject && _curObject isKindOf "Man") then {
     if ((_curObject getVariable ["restrained",false]) && !dialog && playerSide isEqualTo west) then {
         [_curObject] call life_fnc_copInteractionMenu;
     };
