@@ -6,19 +6,18 @@
 *    Description:
 *    Main key handler for event 'keyDown'.
 */
+private ["_handled","_shift","_alt","_code","_ctrl","_alt","_ctrlKey","_veh","_locked","_interactionKey","_interruptionKeys"];
+_ctrl = _this select 0;
+_code = _this select 1;
+_shift = _this select 2;
+_ctrlKey = _this select 3;
+_alt = _this select 4;
+_speed = speed cursorObject;
+_handled = false;
 
-params [
-    "_ctrl",
-    "_code",
-    "_shift",
-    "_ctrlKey",
-    "_alt"
-];
-
-private _speed = speed cursorObject;
-private _handled = false;
-private _interactionKey = if (actionKeys "User10" isEqualTo []) then {219} else {(actionKeys "User10") select 0};
-private _interruptionKeys = [17, 30, 31, 32]; //A,S,W,D
+_interactionKey = if (count (actionKeys "User10") isEqualTo 0) then {219} else {(actionKeys "User10") select 0};
+//hint str _code;
+_interruptionKeys = [17,30,31,32]; //A,S,W,D
 
 //Vault handling...
 if ((_code in (actionKeys "GetOver") || _code in (actionKeys "salute") || _code in (actionKeys "SitDown") || _code in (actionKeys "Throw") || _code in (actionKeys "GetIn") || _code in (actionKeys "GetOut") || _code in (actionKeys "Fire") || _code in (actionKeys "ReloadMagazine") || _code in [16,18]) && ((player getVariable ["restrained",false]) || (player getVariable ["playerSurrender",false]) || life_isknocked || life_istazed)) exitWith {
@@ -26,16 +25,17 @@ if ((_code in (actionKeys "GetOver") || _code in (actionKeys "salute") || _code 
 };
 
 if (life_action_inUse) exitWith {
-    if (!life_interrupted && _code in _interruptionKeys) then {life_interrupted = true};
+    if (!life_interrupted && _code in _interruptionKeys) then {life_interrupted = true;};
     _handled;
 };
 
 //Hotfix for Interaction key not being able to be bound on some operation systems.
-if (!(actionKeys "User10" isEqualTo []) && {(inputAction "User10" > 0)}) exitWith {
+if (!(count (actionKeys "User10") isEqualTo 0) && {(inputAction "User10" > 0)}) exitWith {
     //Interaction key (default is Left Windows, can be mapped via Controls -> Custom -> User Action 10)
     if (!life_action_inUse) then {
         [] spawn {
-            private _handle = [] spawn life_fnc_actionKeyHandler;
+            private "_handle";
+            _handle = [] spawn life_fnc_actionKeyHandler;
             waitUntil {scriptDone _handle};
             life_action_inUse = false;
         };
@@ -141,7 +141,8 @@ switch (_code) do {
     case _interactionKey: {
         if (!life_action_inUse) then {
             [] spawn  {
-                private _handle = [] spawn life_fnc_actionKeyHandler;
+                private "_handle";
+                _handle = [] spawn life_fnc_actionKeyHandler;
                 waitUntil {scriptDone _handle};
                 life_action_inUse = false;
             };
@@ -150,16 +151,16 @@ switch (_code) do {
 
     //Restraining (Shift + R)
     case 19: {
-        if (_shift) then {_handled = true};
-        if (_shift && playerSide isEqualTo west && {!isNull cursorObject} && {cursorObject isKindOf "CAManBase"} && {(isPlayer cursorObject)} && {(side cursorObject in [civilian,independent])} && {alive cursorObject} && {cursorObject distance player < 3.5} && {!(cursorObject getVariable "Escorting")} && {!(cursorObject getVariable "restrained")} && {speed cursorObject < 1}) then {
+        if (_shift) then {_handled = true;};
+        if (_shift && (Trinity_Is_Cop) && {!isNull cursorObject} && {cursorObject isKindOf "Man"} && {(isPlayer cursorObject)} && {(side cursorObject in [civilian,independent])} && {alive cursorObject} && {cursorObject distance player < 3.5} && {!(cursorObject getVariable "Escorting")} && {!(cursorObject getVariable "restrained")} && {speed cursorObject < 1}) then {
             [] call life_fnc_restrainAction;
         };
     };
 
     //Knock out, this is experimental and yeah... (Shift + G)
     case 34: {
-        if (_shift) then {_handled = true};
-        if (_shift && playerSide isEqualTo civilian && !isNull cursorObject && cursorObject isKindOf "CAManBase" && isPlayer cursorObject && alive cursorObject && cursorObject distance player < 4 && speed cursorObject < 1) then {
+        if (_shift) then {_handled = true;};
+        if (_shift && playerSide isEqualTo civilian && !isNull cursorObject && cursorObject isKindOf "Man" && isPlayer cursorObject && alive cursorObject && cursorObject distance player < 4 && speed cursorObject < 1) then {
             if ((animationState cursorObject) != "Incapacitated" && (currentWeapon player == primaryWeapon player || currentWeapon player == handgunWeapon player) && currentWeapon player != "" && !life_knockout && !(player getVariable ["restrained",false]) && !life_istazed && !life_isknocked) then {
                 [cursorObject] spawn life_fnc_knockoutAction;
             };
@@ -195,25 +196,6 @@ switch (_code) do {
         };
     };
 
-    //L Key?
-    case 38: {
-        //If cop run checks for turning lights on.
-        if (_shift && playerSide in [west,independent]) then {
-            if (!(isNull objectParent player) && (typeOf vehicle player) in ["C_Offroad_01_F","B_MRAP_01_F","C_SUV_01_F","C_Hatchback_01_sport_F","B_Heli_Light_01_F","B_Heli_Transport_01_F"]) then {
-                if (!isNil {vehicle player getVariable "lights"}) then {
-                    if (playerSide isEqualTo west) then {
-                        [vehicle player] call life_fnc_sirenLights;
-                    } else {
-                        [vehicle player] call life_fnc_medicSirenLights;
-                    };
-                    _handled = true;
-                };
-            };
-        };
-
-        if (!_alt && !_ctrlKey) then { [] call life_fnc_radar; };
-    };
-
     //Y Player Menu
     case 21: {
         if (!_alt && !_ctrlKey && !dialog && !(player getVariable ["restrained",false]) && {!life_action_inUse}) then {
@@ -221,35 +203,69 @@ switch (_code) do {
         };
     };
 
-    //F Key
-    case 33: {
-        if (playerSide in [west,independent] && {vehicle player != player} && {!life_siren_active} && {((driver vehicle player) == player)}) then {
-            [] spawn {
-                life_siren_active = true;
-                sleep 4.7;
-                life_siren_active = false;
+    //--- L KEY
+    case 38: {
+
+        //--- If cop then run checks for turning lights on.
+        if ( _shift && { playerSide in [ west, independent, civilian ] } ) then {
+
+            if (Trinity_Is_Civ) exitwith {};
+
+            if ( !isNil { vehicle player getVariable "lights" } ) then {
+
+                [ vehicle player ] call AX_fnc_vehicleEmergencyLights;
+                _handled = true;
+
             };
 
-            private _veh = vehicle player;
-            if (isNil {_veh getVariable "siren"}) then {_veh setVariable ["siren",false,true];};
-            if ((_veh getVariable "siren")) then {
-                titleText [localize "STR_MISC_SirensOFF","PLAIN"];
-                _veh setVariable ["siren",false,true];
-                if !(isNil {(_veh getVariable "sirenJIP")}) then {
-                    private _jip = _veh getVariable "sirenJIP";
-                    _veh setVariable ["sirenJIP",nil,true];
-                    remoteExec ["",_jip]; //remove from JIP queue
-                };
+        };
+
+    };
+
+
+    //--- F KEY
+    case 33: {
+
+        //--- Only F
+        if ( !_shift && { playerSide in [ west, independent, civilian ] } && { !( vehicle player isEqualTo player ) } && { !life_siren_active } && { driver vehicle player isEqualTo player } ) then {
+
+            if (Trinity_Is_Civ) exitwith {};
+
+            [] spawn {
+
+                [ vehicle player ] remoteExec [ "AX_fnc_vehicleSiren", 0 ];
+
+                life_siren_active = true;
+
+                sleep 5;
+
+                life_siren_active = false;
+
+            };
+
+            if ( isNil { vehicle player getVariable "siren" } ) then {
+
+                //--- Set Sirens to false on vehicle
+                vehicle player setVariable [ "siren", false, true ];
+
+            };
+
+            if ( vehicle player getVariable "siren" ) then {
+
+                //--- Notify
+                titleText [ localize "STR_MISC_SirensOFF", "PLAIN" ];
+
+                //--- Set Sirens to False on Vehicle
+                vehicle player setVariable [ "siren", false, true ];
+
             } else {
-                titleText [localize "STR_MISC_SirensON","PLAIN"];
-                _veh setVariable ["siren",true,true];
-                private "_jip";
-                if (playerSide isEqualTo west) then {
-                    _jip = [_veh] remoteExec ["life_fnc_copSiren",RCLIENT,true];
-                } else {
-                    _jip = [_veh] remoteExec ["life_fnc_medicSiren",RCLIENT,true];
-                };
-                _veh setVariable ["sirenJIP",_jip,true];
+
+                //--- Notify
+                titleText [ localize "STR_MISC_SirensON", "PLAIN" ];
+
+                //--- Set Variable on Vehicle
+                vehicle player setVariable [ "siren", true, true ];
+
             };
         };
     };
@@ -270,17 +286,17 @@ switch (_code) do {
     //U Key
     case 22: {
         if (!_alt && !_ctrlKey) then {
-            private _veh = if (isNull objectParent player) then {
-                cursorObject;
+            if (isNull objectParent player) then {
+                _veh = cursorObject;
             } else {
-                vehicle player;
+                _veh = vehicle player;
             };
 
             if (_veh isKindOf "House_F" && {playerSide isEqualTo civilian}) then {
                 if (_veh in life_vehicles && {player distance _veh < 20}) then {
-                    private _door = [_veh] call life_fnc_nearestDoor;
+                    _door = [_veh] call life_fnc_nearestDoor;
                     if (_door isEqualTo 0) exitWith {hint localize "STR_House_Door_NotNear"};
-                    private _locked = _veh getVariable [format ["bis_disabled_Door_%1",_door],0];
+                    _locked = _veh getVariable [format ["bis_disabled_Door_%1",_door],0];
 
                     if (_locked isEqualTo 0) then {
                         _veh setVariable [format ["bis_disabled_Door_%1",_door],1,true];
@@ -293,7 +309,7 @@ switch (_code) do {
                     };
                 };
             } else {
-                private _locked = locked _veh;
+                _locked = locked _veh;
                 if (_veh in life_vehicles && {player distance _veh < 20}) then {
                     if (_locked isEqualTo 2) then {
                         if (local _veh) then {

@@ -61,8 +61,13 @@ switch (playerSide) do {
 
     case civilian: {
         life_is_arrested = _this select 7;
-        CONST(life_coplevel, 0);
-        CONST(life_medicLevel, 0);
+        
+        //--- Cop Level
+        CONST(life_coplevel,(_this select 13));
+
+        //--- Medic Level
+        CONST(life_medicLevel,(_this select 14));
+
         life_houses = _this select (_count - 3);
         if (LIFE_SETTINGS(getNumber,"save_playerStats") isEqualTo 1) then {
             life_hunger = ((_this select 9) select 0);
@@ -104,7 +109,7 @@ switch (playerSide) do {
 };
 
 life_gear = _this select 8;
-call life_fnc_loadGear;
+[true] call life_fnc_loadGear;
 
 if (count (_this select (_count - 1)) > 0) then {
     {life_vehicles pushBack _x;} forEach (_this select (_count - 1));
